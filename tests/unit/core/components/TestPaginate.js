@@ -67,14 +67,18 @@ describe('<Paginate />', () => {
     describe('visiblePages()', () => {
       function getVisiblePages(customProps = {}) {
         const root = renderPaginate(customProps);
-        return root.instance().visiblePages({ pageCount: root.instance().pageCount() });
+
+        return root.instance().visiblePages({
+          pageCount: root.instance().pageCount(),
+        });
       }
 
       describe('with lots of pages', () => {
         const commonParams = { count: 30, perPage: 3, showPages: 5 };
 
-        it('will be 0 by default', () => {
-          expect(getVisiblePages({ count: 30, perPage: 3, currentPage: 1 })).toEqual([]);
+        it('will be 7 by default', () => {
+          expect(getVisiblePages({ count: 30, perPage: 3, currentPage: 1 }))
+            .toEqual([1, 2, 3, 4, 5, 6, 7]);
         });
 
         it('will not be less than 0', () => {

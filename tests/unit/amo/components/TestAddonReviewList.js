@@ -1,3 +1,4 @@
+import { shallow } from 'enzyme';
 import * as React from 'react';
 
 import fallbackIcon from 'amo/img/icons/default-64.png';
@@ -530,7 +531,7 @@ describe(__filename, () => {
       dispatchAddon();
       dispatchAddonReviews();
       const root = render();
-      expect(root.find(Paginate))
+      expect(shallow(root.find('.AddonReviewList-reviews').prop('footer')))
         .toHaveProp('pathname', root.instance().url());
     });
 
@@ -538,7 +539,8 @@ describe(__filename, () => {
       dispatchAddon();
       dispatchAddonReviews();
       const root = render();
-      expect(root.find(Paginate)).toHaveProp('LinkComponent', Link);
+      expect(shallow(root.find('.AddonReviewList-reviews').prop('footer')))
+        .toHaveProp('LinkComponent', Link);
     });
 
     it('configures a paginator with the right review count', () => {
@@ -550,7 +552,8 @@ describe(__filename, () => {
       dispatchAddon();
       dispatchAddonReviews({ reviews });
       const root = render();
-      expect(root.find(Paginate)).toHaveProp('count', reviews.length);
+      expect(shallow(root.find('.AddonReviewList-reviews').prop('footer')))
+        .toHaveProp('count', reviews.length);
     });
 
     it('sets the paginator to page 1 without a query', () => {
@@ -558,7 +561,8 @@ describe(__filename, () => {
       dispatchAddonReviews();
       // Render with an empty query string.
       const root = render({ location: fakeRouterLocation() });
-      expect(root.find(Paginate)).toHaveProp('currentPage', 1);
+      expect(shallow(root.find('.AddonReviewList-reviews').prop('footer')))
+        .toHaveProp('currentPage', 1);
     });
 
     it('sets the paginator to the query string page', () => {
@@ -567,7 +571,8 @@ describe(__filename, () => {
       const root = render({
         location: fakeRouterLocation({ query: { page: 3 } }),
       });
-      expect(root.find(Paginate)).toHaveProp('currentPage', 3);
+      expect(shallow(root.find('.AddonReviewList-reviews').prop('footer')))
+        .toHaveProp('currentPage', 3);
     });
 
     it('renders an HTML title', () => {

@@ -52,7 +52,7 @@ export default class Card extends React.Component {
     } else if (footerLink) {
       footer = footerLink;
       footerClass += ' Card-footer-link';
-    } else {
+    } else if (footerNode)  {
       footer = footerNode;
     }
 

@@ -20,18 +20,20 @@ export type AddonsByAuthorsState = {|
   // expensive.
   byAddonId: { [AddonId]: SearchResultAddonType },
   byAddonSlug: { [string]: Array<AddonId> },
+  byAuthorNamesAndAddonType: { [string]: Array<AddonId> | null },
   byUserId: { [number]: Array<AddonId> },
   byUsername: { [string]: Array<AddonId> },
-  byAuthorNamesAndAddonType: { [string]: Array<AddonId> | null },
+  countFor: { [string]: number },
   loadingFor: { [string]: boolean },
 |};
 
 export const initialState: AddonsByAuthorsState = {
   byAddonId: {},
   byAddonSlug: {},
+  byAuthorNamesAndAddonType: {},
   byUserId: {},
   byUsername: {},
-  byAuthorNamesAndAddonType: {},
+  countFor: {},
   loadingFor: {},
 };
 
@@ -50,6 +52,9 @@ type FetchAddonsByAuthorsParams = {|
   authorUsernames: Array<string>,
   errorHandlerId: string,
   forAddonSlug?: string,
+  page?: number,
+  pageSize: number,
+  sort?: string,
 |};
 
 type FetchAddonsByAuthorsAction = {|
@@ -57,13 +62,20 @@ type FetchAddonsByAuthorsAction = {|
   payload: FetchAddonsByAuthorsParams,
 |};
 
-export const fetchAddonsByAuthors = (
-  { addonType, authorUsernames, errorHandlerId, forAddonSlug }: FetchAddonsByAuthorsParams
-): FetchAddonsByAuthorsAction => {
+export const fetchAddonsByAuthors = ({
+  addonType,
+  authorUsernames,
+  errorHandlerId,
+  forAddonSlug,
+  page,
+  pageSize,
+  sort,
+}: FetchAddonsByAuthorsParams): FetchAddonsByAuthorsAction => {
   invariant(errorHandlerId, 'An errorHandlerId is required');
   invariant(authorUsernames, 'authorUsernames are required.');
   invariant(Array.isArray(authorUsernames),
     'The authorUsernames parameter must be an array.');
+  invariant(pageSize, 'pageSize are required.');
 
   return {
     type: FETCH_ADDONS_BY_AUTHORS,
@@ -72,14 +84,18 @@ export const fetchAddonsByAuthors = (
       authorUsernames,
       errorHandlerId,
       forAddonSlug,
+      page,
+      pageSize,
+      sort,
     },
   };
 };
 
 type LoadAddonsByAuthorsParams = {|
-  addons: Array<ExternalAddonType>,
   addonType?: string,
+  addons: Array<ExternalAddonType>,
   authorUsernames: Array<string>,
+  count: number,
   forAddonSlug?: string,
 |};
 
@@ -88,15 +104,26 @@ type LoadAddonsByAuthorsAction = {|
   payload: LoadAddonsByAuthorsParams,
 |};
 
-export const loadAddonsByAuthors = (
-  { addons, addonType, authorUsernames, forAddonSlug }: LoadAddonsByAuthorsParams
-): LoadAddonsByAuthorsAction => {
+export const loadAddonsByAuthors = ({
+  addonType,
+  addons,
+  authorUsernames,
+  count,
+  forAddonSlug,
+}: LoadAddonsByAuthorsParams): LoadAddonsByAuthorsAction => {
   invariant(addons, 'A set of add-ons is required.');
   invariant(authorUsernames, 'A list of authorUsernames is required.');
+  invariant(count, 'count is required.');
 
   return {
     type: LOAD_ADDONS_BY_AUTHORS,
-    payload: { addons, addonType, authorUsernames, forAddonSlug },
+    payload: {
+      addons,
+      addonType,
+      authorUsernames,
+      count,
+      forAddonSlug,
+    },
   };
 };
 
@@ -107,10 +134,21 @@ export const joinAuthorNamesAndAddonType = (
 };
 
 export const getLoadingForAuthorNames = (
+  state: AddonsByAuthorsState,
+  authorUsernames: Array<string>,
+  addonType?: string
+): boolean => {
+  return (
+    state.loadingFor[joinAuthorNamesAndAddonType(authorUsernames, addonType)] ||
+    false
+  );
+};
+
+export const getCountForAuthorNames = (
   state: AddonsByAuthorsState, authorUsernames: Array<string>, addonType?: string
 ) => {
   return (
-    state.loadingFor[joinAuthorNamesAndAddonType(authorUsernames, addonType)] ||
+    state.countFor[joinAuthorNamesAndAddonType(authorUsernames, addonType)] ||
     null
   );
 };
@@ -204,9 +242,12 @@ const reducer = (
         .map((addon) => createInternalAddon(addon));
 
       const authorNamesWithAddonType = joinAuthorNamesAndAddonType(
-        action.payload.authorUsernames, action.payload.addonType);
+        action.payload.authorUsernames,
+        action.payload.addonType
+      );
 
       newState.byAuthorNamesAndAddonType[authorNamesWithAddonType] = [];
+      newState.countFor[authorNamesWithAddonType] = action.payload.count;
       newState.loadingFor[authorNamesWithAddonType] = false;
 
       for (const addon of addons) {
